@@ -1,6 +1,6 @@
 ﻿namespace MonoProject.GameEngine;
 
-internal class Camera
+internal class Camera1
 {
     public float Zoom { get; set; }
     public Vector2 Position { get; set; }
@@ -8,7 +8,7 @@ internal class Camera
     public Rectangle VisibleArea { get; protected set; }
     public Matrix Transform { get; protected set; }
 
-    public Camera(Viewport viewport)
+    public Camera1(Viewport viewport)
     {
         Bounds = viewport.Bounds;
         Zoom = 1f;
