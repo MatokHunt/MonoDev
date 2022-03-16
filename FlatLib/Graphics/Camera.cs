@@ -10,7 +10,7 @@ namespace FlatLib.Graphics
         public readonly static float MaxZ = 2048f;
 
         public readonly static int MinZoom = 1;
-        public readonly static int MaxZoom = 20;
+        public readonly static int MaxZoom = 3;
 
         private Vector2 position;
         private float z;
@@ -96,11 +96,13 @@ namespace FlatLib.Graphics
 
         public void Move(Vector2 amount)
         {
+            amount.Floor();
             this.position += amount;
         }
 
         public void MoveTo(Vector2 position)
         {
+            position.Floor();
             this.position = position;
         }
 

@@ -61,6 +61,16 @@ namespace FlatLib.Input
             return this.currMouseState.MiddleButton == ButtonState.Pressed && this.prevMouseState.MiddleButton == ButtonState.Released;
         }
 
+        public bool IsScrollUp()
+        {
+            return this.currMouseState.ScrollWheelValue > this.prevMouseState.ScrollWheelValue;
+        }
+
+        public bool IsScrollDown()
+        {
+            return this.currMouseState.ScrollWheelValue < this.prevMouseState.ScrollWheelValue;
+        }
+
         public Vector2 GetScreenPosition(Screen screen)
         {
             Rectangle screenDestination = screen.CalculateDestinationRectangle();

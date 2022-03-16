@@ -246,6 +246,19 @@ namespace FlatLib.Graphics
             this.DrawLine(left, bottom, left, top, thickness, color);
         }
 
+        public void DrawRectangle(Rectangle rectangle, float thickness, Color color)
+        {
+            float left = rectangle.X;
+            float right = rectangle.X + rectangle.Width;
+            float bottom = rectangle.Y;
+            float top = rectangle.Y + rectangle.Height;
+
+            this.DrawLine(left, top, right, top, thickness, color);
+            this.DrawLine(right, top, right, bottom, thickness, color);
+            this.DrawLine(right, bottom, left, bottom, thickness, color);
+            this.DrawLine(left, bottom, left, top, thickness, color);
+        }
+
         public void DrawCircle(float x, float y, float radius, int points, float thickness, Color color)
         {
             const int minPoints = 3;
@@ -275,7 +288,51 @@ namespace FlatLib.Graphics
             }
         }
 
-        public void DrawPoloygon(Vector2[] vertices, Transform2D transform, float thickness, Color color)
+        public void DrawCircleFill(float x, float y, float radius, int points, Color color)
+        {
+            this.EnsureStarted();
+
+            const int minPoints = 3;
+            const int maxPoints = 256;
+
+            int shapeVertexCount = Util.Clamp(points, minPoints, maxPoints);
+            int shapeTriangleCount = shapeVertexCount - 2;
+            int shapeIndexCount = shapeTriangleCount * 3;
+
+            this.EnsureSpace(shapeVertexCount, shapeIndexCount);
+
+            int index = 1;
+
+            for(int i = 0; i < shapeTriangleCount; i++)
+            {
+                this.indices[this.indexCount++] = 0 + this.vertexCount;
+                this.indices[this.indexCount++] = index + this.vertexCount;
+                this.indices[this.indexCount++] = index + 1 + this.vertexCount;
+                index++;
+            }
+
+            float rotation = MathHelper.TwoPi / (float)points;
+            float sin = (float)Math.Sin(rotation);
+            float cos = (float)Math.Cos(rotation);
+
+            float ax = radius;
+            float ay = 0f;
+
+            for(int i = 0; i < shapeVertexCount; i++)
+            {
+                float x1 = ax;
+                float y1 = ay;
+
+                this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(x1 + x, y1 + y, 0f), color);
+
+                ax = cos * x1 - sin * y1;
+                ay = sin * x1 + cos * y1;
+            }
+
+            this.shapeCount++;
+        }
+
+        public void DrawPolygon(Vector2[] vertices, Transform2D transform, float thickness, Color color)
         {
             for (int i = 0; i < vertices.Length; i++)
             {
@@ -287,6 +344,45 @@ namespace FlatLib.Graphics
 
                 this.DrawLine(a, b, thickness, color);
             }
+        }
+
+        public void DrawPolygonFill(Vector2[] vertices, int[] triangleIndecies, Transform2D transform, Color color)
+        {
+#if DEBUG
+            if(vertices == null)
+            {
+                throw new ArgumentNullException(nameof(vertices));
+            }
+            if(indices == null)
+            {
+                throw new ArgumentNullException (nameof(indices));
+            }
+            if(vertices.Length < 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vertices));
+            }
+            if(indices.Length < 3)
+            {
+                throw new ArgumentOutOfRangeException (nameof(indices));
+            }
+#endif
+            this.EnsureStarted();
+            this.EnsureSpace(vertices.Length, triangleIndecies.Length);
+
+            for (int i = 0; i < triangleIndecies.Length; i++)
+            {
+                this.indices[this.indexCount++] = triangleIndecies[i] + this.vertexCount;
+            }
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector2 vertex = vertices[i];
+                vertex = Util.Transform(vertex, transform);
+
+                this.vertices[this.vertexCount++] = new VertexPositionColor(new Vector3(vertex.X, vertex.Y, 0f), color);
+            }
+
+            this.shapeCount++;
         }
 
         public void Dispose()

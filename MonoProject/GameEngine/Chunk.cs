@@ -2,38 +2,77 @@
 
 internal class Chunk
 {
-    public ushort[,,] Cell { get; set; }
-    public Point WorldCoordinates { get; private set; }
+    private const int tileSize = 32;
+    private const int halfTileSize = 16;
+
+    private ushort[,,] cell;
+    private Point position;
+    private Vector2 tileScale;
+    private Vector2 tileOrigin;
+    
+    public ushort[,,] Cell
+    {
+        get { return cell; }
+    }
+
+    public Point Position
+    {
+        get { return position; }
+    }
+    
     public Rectangle Area
     { 
         get
         {
-            var x = (WorldCoordinates.X) * (16 * 4 * Cell.GetLength(0)) - (WorldCoordinates.Y) * (16 * 4 * Cell.GetLength(1)) - ((256 - 16) * 4);
-            var y = (WorldCoordinates.Y) * (16 * 2 * Cell.GetLength(1)) - 1024 + ((WorldCoordinates.X * (256)) * 2);
-            return new Rectangle(x, y, 512 * 4, 512 * 4);
+            return new Rectangle(
+                -(int)(this.cell.GetLength(0) * halfTileSize * tileScale.X),
+                -(int)(this.cell.GetLength(2) * tileSize),
+                (int)(this.cell.GetLength(0) * tileSize * tileScale.X),
+                (int)(this.cell.GetLength(1) * tileSize * tileScale.Y));
         } 
     }
     
-    public Chunk(Point coords)
+    public Chunk(Point position)
     {
-        Cell = new ushort[16, 16, 16];
-        WorldCoordinates = coords;
+        this.cell = new ushort[16, 16, 16];
+        this.position = position;
+        this.tileScale = new Vector2(2f, 2f);
+        this.tileOrigin = new Vector2(16, 16);
     }
 
-    public bool Exposed(ushort x, ushort y, ushort level)
+    public void Draw(Sprites sprites, Texture2D[] tiles, Vector2 position)
     {
-        var isExposed = false;
-        if (level + 1 == Cell.GetLength(2) || Cell[x, y, level + 1] == 0)
+        for (int height = 0; height < this.cell.GetLength(2); height++)
+        {
+            for (int x = 0; x < this.cell.GetLength(0); x++)
+            {
+                for (int y = 0; y < this.cell.GetLength(1); y++)
+                {
+                    float ix = x * tileSize - y * tileSize;
+                    float iy = -x * halfTileSize - y * halfTileSize + height * tileSize;
+                    if (this.cell[x, y, height] > 0 && this.IsExposed(x, y, height))
+                    {
+                        sprites.Draw(tiles[this.cell[x, y, height]], null, this.tileOrigin, new Vector2(ix + position.X, iy + position.Y), 0f, this.tileScale, Color.Green);
+                    }
+                }
+            }
+        }
+    }
+
+    public bool IsExposed(int x, int y, int height)
+    {
+        bool isExposed = false;
+        if (height + 1 == this.cell.GetLength(2) || this.cell[x, y, height + 1] == 0)
         {
             isExposed = true;
             return isExposed;
         }
-        if (x + 1 == Cell.GetLength(0) || Cell[x + 1, y, level] == 0 || Cell[x + 1, y, level] > 1)
+        if (x + 1 == this.cell.GetLength(0) || this.cell[x + 1, y, height] == 0 || this.cell[x + 1, y, height] > 1)
         {
             isExposed = true;
             return isExposed;
         }
-        if (y + 1 == Cell.GetLength(1) || Cell[x, y + 1, level] == 0 || Cell[x, y + 1, level] > 1)
+        if (y + 1 == this.cell.GetLength(1) || this.cell[x, y + 1, height] == 0 || this.cell[x, y + 1, height] > 1)
         {
             isExposed = true;
         }

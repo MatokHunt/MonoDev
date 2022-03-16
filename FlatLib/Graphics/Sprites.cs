@@ -57,7 +57,7 @@ namespace FlatLib.Graphics
                 this.effect.View = camera.View;
                 this.effect.Projection = camera.Projection;
             }
-            
+
             this.sprites.Begin(blendState: BlendState.AlphaBlend, samplerState: samplerState, rasterizerState: RasterizerState.CullNone, effect: this.effect);
         }
 
@@ -79,6 +79,11 @@ namespace FlatLib.Graphics
         public void Draw(Texture2D texture, Rectangle? source, Rectangle destination, Color color)
         {
             this.sprites.Draw(texture, destination, source, color, 0f, Vector2.Zero, SpriteEffects.FlipVertically, 0f);
+        }
+
+        public void DrawString(SpriteFont font, string text, Vector2 position, Color color, float rotation = 0f)
+        {
+            this.sprites.DrawString(font, text, position, color, rotation, Vector2.Zero, 1f, SpriteEffects.FlipVertically, 0f);
         }
     }
 }
