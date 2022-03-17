@@ -148,5 +148,11 @@ namespace FlatLib.Graphics
             min = new Vector2(left, bottom);
             max = new Vector2(right, top);
         }
+
+        public Rectangle GetViewRectangle()
+        {
+            this.GetExtents(out Vector2 min, out Vector2 max);
+            return new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y));
+        }
     }
 }

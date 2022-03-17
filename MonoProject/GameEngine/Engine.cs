@@ -22,9 +22,6 @@ public class Engine : Game
     private SpriteFont font;
     private World world = new World();
 
-    private Vector2[] vertices;
-    private int[] triangleIndices;
-
     public Engine()
     {
         this.graphics = new GraphicsDeviceManager(this);
@@ -47,28 +44,6 @@ public class Engine : Game
         this.shapes = new Shapes(this);
         this.camera = new Camera(this.screen);
 
-        Random random = new Random();
-
-        vertices = new Vector2[5];
-        vertices[0] = new Vector2(0, 10);
-        vertices[1] = new Vector2(10, -10);
-        vertices[2] = new Vector2(3, -6);
-        vertices[3] = new Vector2(-3, -6);
-        vertices[4] = new Vector2(-10, -10);
-
-        int triangleCount = this.vertices.Length - 2;
-
-        this.triangleIndices = new int[triangleCount * 3];
-        this.triangleIndices[0] = 0;
-        this.triangleIndices[1] = 1;
-        this.triangleIndices[2] = 2;
-        this.triangleIndices[3] = 0;
-        this.triangleIndices[4] = 2;
-        this.triangleIndices[5] = 3;
-        this.triangleIndices[6] = 0;
-        this.triangleIndices[7] = 3;
-        this.triangleIndices[8] = 4;
-
         base.Initialize(); 
     }
 
@@ -90,7 +65,6 @@ public class Engine : Game
         this.font = Content.Load<SpriteFont>("Font\\Font");
 
         this.world.LoadChunk(new Point(0, 0));
-        /*
         this.world.LoadChunk(new Point(-1, 1));
         this.world.LoadChunk(new Point(1, -1));
         this.world.LoadChunk(new Point(1, 0));
@@ -101,7 +75,7 @@ public class Engine : Game
         this.world.LoadChunk(new Point(2, 1));
         this.world.LoadChunk(new Point(1, 2));
         this.world.LoadChunk(new Point(2, 2));
-        */
+       
         Random random = new Random();
         foreach (var chunk in world.LoadedChunks)
         {
@@ -109,20 +83,20 @@ public class Engine : Game
             {
                 for (byte y = 0; y < chunk.Cell.GetLength(1); y++)
                 {
-                    
+                    /*
                     for(byte z = 0; z < chunk.Cell.GetLength(2); z++)
                     {
                         chunk.Cell[x, y, z] = 1;
                     }
+                    */
                     
-                    /*
                     chunk.Cell[x, y, 0] = 1;
                     chunk.Cell[x, y, 1] = (ushort)random.Next(0, 3);
                     if (chunk.Cell[x, y, 1] == 1)
                     {
                         chunk.Cell[x, y, 2] = (ushort)random.Next(0, 3);
                     }
-                    */
+                    
                 }
             }
         }
@@ -145,9 +119,7 @@ public class Engine : Game
 
         if (keyboard.IsKeyPressed(Keys.OemTilde))
         {
-            this.camera.GetExtents(out Vector2 min, out Vector2 max);
-            Console.WriteLine("Cam Min: " + min);
-            Console.WriteLine("Cam Max: " + max);
+            
         }
 
         if (keyboard.IsKeyPressed(Keys.F2))
@@ -169,19 +141,19 @@ public class Engine : Game
 
         if (keyboard.IsKeyDown(Keys.A))
         {
-            amount.X = -1;
+            amount.X = 1;
         }
         if (keyboard.IsKeyDown(Keys.D))
         {
-            amount.X = 1;
+            amount.X = -1;
         }
         if (keyboard.IsKeyDown(Keys.W))
         {
-            amount.Y = 1;
+            amount.Y = -1;
         }
         if (keyboard.IsKeyDown(Keys.S))
         {
-            amount.Y = -1;
+            amount.Y = 1;
         }
         if (amount != Vector2.Zero)
         {
@@ -196,9 +168,9 @@ public class Engine : Game
         }
         if (mouse.IsLeftButtonDown())
         {
-            camera.MoveTo(cameraDragOrigin  + ((mouse.GetScreenPosition(this.screen) - mouseDragOrigin)) / this.camera.zoom);
+            camera.MoveTo(cameraDragOrigin  - ((mouse.GetScreenPosition(this.screen) - mouseDragOrigin)) / this.camera.zoom);
         }
-   
+
         base.Update(gameTime);
         this.calcTime.Stop();
     }
@@ -211,39 +183,33 @@ public class Engine : Game
         this.screen.Set();
         this.GraphicsDevice.Clear(Color.Black);
 
-        Rectangle area = Rectangle.Empty;
-
         this.sprites.Begin(camera, false);
-        //this.sprites.Draw(tiles[1], null, new Vector2(16, 16), new Vector2(camera.Position.X, camera.Position.Y), 0f, new Vector2(2f, 2f), Color.Green);
+        
+        Rectangle camView = this.camera.GetViewRectangle();
+        
         foreach (var chunk in world.LoadedChunks)
         {
-            area = chunk.Area;
-            chunk.Draw(this.sprites, tiles, camera.Position);
+            if (camView.Intersects(chunk.Area))
+            {
+                chunk.Draw(this.sprites, tiles, camera.Position);
+            }
         }
         this.sprites.End();
 
         this.shapes.Begin(camera);
-        //Transform2D transform = new Transform2D(new Vector2(0f, 100f), this.angle, 2f);
-        //this.shapes.DrawPolygonFill(this.vertices, this.triangleIndices, transform, Color.LightGreen);
-        //this.shapes.DrawCircleFill(-32, -32, 64, 64, Color.White);
         this.shapes.DrawLine(0, -5, 0, 5, 1f, Color.White);
         this.shapes.DrawLine(-5, 0, 5, 0, 1f, Color.White);
-        area.X += (int)camera.Position.X;
-        area.Y += (int)camera.Position.Y;
-        this.shapes.DrawRectangle(area, 1f, Color.White);
         this.shapes.End();
         
         this.sprites.Begin(null, true);
 #if DEBUG
-        this.sprites.DrawString(font, String.Format("UPS: {0}", this.updateRate.ToString("0.00")), new Vector2(0, 0), Color.CornflowerBlue);
-        this.sprites.DrawString(font, String.Format("FPS: {0}", this.frameRate.ToString("0.00")), new Vector2(0, 20), Color.CornflowerBlue);
-        this.sprites.DrawString(font, String.Format("CAM: {0}", this.camera.Position.ToString()), new Vector2(0, 40), Color.CornflowerBlue);
         Mouse2D mouse = Mouse2D.Instance;
-        mouse.Update();
-        this.sprites.DrawString(font, String.Format("MOUSE: {0}", mouse.GetScreenPosition(this.screen).ToString()), new Vector2(0, 60), Color.CornflowerBlue);
-        this.sprites.DrawString(font, String.Format("CALC: {0}ms", this.calcTime.Elapsed.TotalMilliseconds.ToString("0.00")), new Vector2(0, 80), Color.CornflowerBlue);
-        this.sprites.DrawString(font, String.Format("DRAW: {0}ms", prevDrawTime.ToString("0.00")), new Vector2(0, 100), Color.CornflowerBlue);
-        this.sprites.DrawString(font, String.Format("AREA: {0}", area.ToString()), new Vector2(0, 120), Color.CornflowerBlue);
+        this.sprites.DrawString(font, String.Format("UPS: {0}", this.updateRate.ToString("0.00")), new Vector2(0, 0), Color.Wheat);
+        this.sprites.DrawString(font, String.Format("FPS: {0}", this.frameRate.ToString("0.00")), new Vector2(0, 20), Color.Wheat);
+        this.sprites.DrawString(font, String.Format("CAM: {0}", this.camera.Position.ToString()), new Vector2(0, 40), Color.Wheat);
+        this.sprites.DrawString(font, String.Format("MOUSE: {0}", mouse.GetScreenPosition(this.screen).ToString()), new Vector2(0, 60), Color.Wheat);
+        this.sprites.DrawString(font, String.Format("CALC: {0}ms", this.calcTime.Elapsed.TotalMilliseconds.ToString("0.00")), new Vector2(0, 80), Color.Wheat);
+        this.sprites.DrawString(font, String.Format("DRAW: {0}ms", prevDrawTime.ToString("0.00")), new Vector2(0, 100), Color.Wheat);
 #endif
         this.sprites.End();
 

@@ -4,6 +4,8 @@ internal class Chunk
 {
     private const int tileSize = 32;
     private const int halfTileSize = 16;
+    private const int chunkSize = 512;
+    private const int halfChunkSize = 256;
 
     private ushort[,,] cell;
     private Point position;
@@ -24,11 +26,13 @@ internal class Chunk
     { 
         get
         {
+            int ix = -chunkSize + this.position.X * chunkSize - this.position.Y * chunkSize;
+            int iy = -halfChunkSize - this.position.X * halfChunkSize - this.position.Y * halfChunkSize - halfChunkSize;
             return new Rectangle(
-                -(int)(this.cell.GetLength(0) * halfTileSize * tileScale.X),
-                -(int)(this.cell.GetLength(2) * tileSize),
-                (int)(this.cell.GetLength(0) * tileSize * tileScale.X),
-                (int)(this.cell.GetLength(1) * tileSize * tileScale.Y));
+                ix,
+                iy,
+                chunkSize * (int)tileScale.X,
+                chunkSize * (int)tileScale.Y);
         } 
     }
     
@@ -49,10 +53,14 @@ internal class Chunk
                 for (int y = 0; y < this.cell.GetLength(1); y++)
                 {
                     float ix = x * tileSize - y * tileSize;
+                    ix += this.position.X * chunkSize - this.position.Y * chunkSize;
+
                     float iy = -x * halfTileSize - y * halfTileSize + height * tileSize;
+                    iy -=this.position.X * halfChunkSize + this.position.Y * halfChunkSize;
+
                     if (this.cell[x, y, height] > 0 && this.IsExposed(x, y, height))
                     {
-                        sprites.Draw(tiles[this.cell[x, y, height]], null, this.tileOrigin, new Vector2(ix + position.X, iy + position.Y), 0f, this.tileScale, Color.Green);
+                        sprites.Draw(tiles[this.cell[x, y, height]], null, this.tileOrigin, new Vector2(ix - position.X, iy - position.Y), 0f, this.tileScale, Color.Green);
                     }
                 }
             }
