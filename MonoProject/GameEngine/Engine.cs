@@ -21,6 +21,7 @@ public class Engine : Game
     
     private SpriteFont font;
     private World world = new World();
+    private Cursor cursor;
 
     public Engine()
     {
@@ -53,15 +54,18 @@ public class Engine : Game
         this.tileAtlas = Texture2D.FromStream(GraphicsDevice, fileStream);
         fileStream.Dispose();
         this.tiles = new Texture2D[4];
+        this.tiles[0] = new Texture2D(GraphicsDevice, 32, 32);
         this.tiles[1] = new Texture2D(GraphicsDevice, 32, 32);
         this.tiles[2] = new Texture2D(GraphicsDevice, 32, 32);
-        this.tiles[3] = new Texture2D(GraphicsDevice, 32, 32);
         Color[] data = new Color[32 * 32];
         this.tileAtlas.GetData(0, new Rectangle(0, 0, 32, 32), data, 0, data.Length);
-        this.tiles[1].SetData(data);
+        this.tiles[0].SetData(data);
         this.tileAtlas.GetData(0, new Rectangle(32, 0, 32, 32), data, 0, data.Length);
+        this.tiles[1].SetData(data);
+        this.tileAtlas.GetData(0, new Rectangle(64, 0, 32, 32), data, 0, data.Length);
         this.tiles[2].SetData(data);
 
+        this.cursor = new Cursor(tiles[0]);
         this.font = Content.Load<SpriteFont>("Font\\Font");
 
         this.world.LoadChunk(new Point(0, 0));
@@ -194,6 +198,7 @@ public class Engine : Game
                 chunk.Draw(this.sprites, tiles, camera.Position);
             }
         }
+        cursor.Draw(this.sprites, this.camera);
         this.sprites.End();
 
         this.shapes.Begin(camera);
